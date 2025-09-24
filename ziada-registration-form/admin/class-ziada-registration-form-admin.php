@@ -56,8 +56,9 @@ class Ziada_Registration_Form_Admin {
      * @since    1.0.0
      */
     public function add_admin_menu() {
+        // Main Menu Page (Submissions List)
         add_menu_page(
-            'Ziada',
+            'Ziada Submissions',
             'Ziada',
             'manage_options',
             $this->plugin_name,
@@ -65,6 +66,56 @@ class Ziada_Registration_Form_Admin {
             'dashicons-list-view',
             25
         );
+
+        // Submissions Submenu Page (to have a clear menu label)
+        add_submenu_page(
+            $this->plugin_name,
+            'Submissions',
+            'Submissions',
+            'manage_options',
+            $this->plugin_name, // This makes it the default page for the main menu item
+            array( $this, 'display_plugin_admin_page' )
+        );
+
+        // About Submenu Page
+        add_submenu_page(
+            $this->plugin_name,
+            'About Ziada',
+            'About',
+            'manage_options',
+            $this->plugin_name . '-about',
+            array( $this, 'display_about_page' )
+        );
+    }
+
+    /**
+     * Render the 'About' page for this plugin.
+     *
+     * @since    1.0.0
+     */
+    public function display_about_page() {
+        ?>
+        <div class="wrap">
+            <h1>About Ziada</h1>
+            <p>This plugin was created by <strong>Frank Galos</strong>.</p>
+
+            <h2>About Owesis</h2>
+            <?php
+            $response = wp_remote_get('https://owesis.com');
+            if (is_wp_error($response)) {
+                echo '<p>Could not retrieve content from Owesis.com. Please try again later.</p>';
+            } else {
+                $body = wp_remote_retrieve_body($response);
+                // For security and to prevent breaking admin UI, we'll just show a snippet of the text content.
+                $text_content = wp_strip_all_tags($body);
+                echo '<div style="background:#fff; border: 1px solid #ccc; padding: 15px; max-height: 400px; overflow-y: auto;">';
+                echo '<p>' . esc_html(substr($text_content, 0, 1000)) . '...</p>';
+                echo '</div>';
+                echo '<p><a href="https://owesis.com" target="_blank">Visit Owesis.com for more information.</a></p>';
+            }
+            ?>
+        </div>
+        <?php
     }
 
     /**
@@ -105,7 +156,7 @@ class Ziada_Registration_Form_Admin {
             $list_table->prepare_items();
             ?>
             <div class="wrap">
-                <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+                <h1><?php echo esc_html( get_admin_page_title() ); ?> <a href="<?php echo esc_url(add_query_arg(array('action' => 'export_csv', '_wpnonce' => wp_create_nonce('ziada_export_nonce')))); ?>" class="page-title-action">Export to CSV</a></h1>
                 <form method="post">
                     <?php
                     $list_table->display();
@@ -145,6 +196,41 @@ class Ziada_Registration_Form_Admin {
                     $ids_sql = implode( ',', $delete_ids );
                     $wpdb->query( "DELETE FROM $table_name WHERE id IN($ids_sql)" );
                     wp_safe_redirect( admin_url( 'admin.php?page=' . $this->plugin_name . '&message=deleted' ) );
+                    exit;
+                }
+            }
+        }
+    }
+
+    /**
+     * Process the CSV export request.
+     *
+     * @since 1.0.0
+     */
+    public function process_csv_export() {
+        if ( isset( $_GET['action'] ) && $_GET['action'] == 'export_csv' && isset( $_GET['_wpnonce'] ) ) {
+            if ( wp_verify_nonce( $_GET['_wpnonce'], 'ziada_export_nonce' ) && current_user_can( 'manage_options' ) ) {
+                global $wpdb;
+                $table_name = $wpdb->prefix . 'ziada_registrations';
+                $data = $wpdb->get_results( "SELECT * FROM $table_name ORDER BY id DESC", ARRAY_A );
+
+                if ( $data ) {
+                    $filename = 'ziada-submissions-' . date('Y-m-d') . '.csv';
+
+                    header('Content-Type: text/csv');
+                    header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+                    $output = fopen('php://output', 'w');
+
+                    // Add header row
+                    fputcsv($output, array_keys($data[0]));
+
+                    // Add data rows
+                    foreach ($data as $row) {
+                        fputcsv($output, $row);
+                    }
+
+                    fclose($output);
                     exit;
                 }
             }

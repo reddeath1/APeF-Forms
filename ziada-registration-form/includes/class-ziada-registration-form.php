@@ -103,6 +103,7 @@ class Ziada_Registration_Form {
         $plugin_admin = new Ziada_Registration_Form_Admin( $this->get_plugin_name(), $this->get_version() );
         add_action( 'admin_menu', array( $plugin_admin, 'add_admin_menu' ) );
         add_action( 'admin_enqueue_scripts', array( $plugin_admin, 'enqueue_scripts' ) );
+        add_action( 'admin_init', array( $plugin_admin, 'process_csv_export' ) );
     }
 
     /**
