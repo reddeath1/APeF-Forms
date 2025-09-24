@@ -6,7 +6,7 @@
  * A class definition that includes attributes and functions used across both the
  * public-facing side of the site and the admin area.
  *
- * @link       https://example.com/
+ * @link       https://owesis.com
  * @since      1.0.0
  *
  * @package    Ziada_Reg_Form
@@ -25,7 +25,7 @@
  * @since      1.0.0
  * @package    Ziada_Reg_Form
  * @subpackage Ziada_Reg_Form/includes
- * @author     Jules <you@example.com>
+ * @author     Frank Galos
  */
 class Ziada_Registration_Form {
 
@@ -56,6 +56,15 @@ class Ziada_Registration_Form {
      * @var      string    $version    The current version of the plugin.
      */
     protected $version;
+
+    /**
+     * A flag to check if the shortcode is present on the page.
+     *
+     * @since    1.0.0
+     * @access   private
+     * @var      boolean
+     */
+    private static $load_assets = false;
 
     /**
      * Define the core functionality of the plugin.
@@ -114,11 +123,15 @@ class Ziada_Registration_Form {
      * @access   private
      */
     private function define_public_hooks() {
+        add_action( 'wp', array( $this, 'check_for_shortcode' ) );
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
         add_shortcode( 'ziada_registration_form', array( $this, 'display_shortcode' ) );
 
-        add_action( 'admin_post_nopriv_ziada_form_submit', array( $this, 'handle_form_submission' ) );
-        add_action( 'admin_post_ziada_form_submit', array( $this, 'handle_form_submission' ) );
+        // add_action( 'admin_post_nopriv_ziada_form_submit', array( $this, 'handle_form_submission' ) );
+        // add_action( 'admin_post_ziada_form_submit', array( $this, 'handle_form_submission' ) );
+
+        add_action( 'wp_ajax_nopriv_ziada_form_submit', array( $this, 'handle_ajax_submission' ) );
+        add_action( 'wp_ajax_ziada_form_submit', array( $this, 'handle_ajax_submission' ) );
     }
 
     /**
@@ -127,8 +140,10 @@ class Ziada_Registration_Form {
      * @since 1.0.0
      */
     public function enqueue_assets() {
-        // We only want to load these on pages where our shortcode is present.
-        // A more advanced implementation would check for the shortcode on the page.
+        // Only load assets if the shortcode is present.
+        if (!self::$load_assets) {
+            return;
+        }
 
         // Bootstrap CSS
         wp_enqueue_style(
@@ -163,6 +178,13 @@ class Ziada_Registration_Form {
             $this->version,
             true
         );
+
+        // Localize the script with new data
+        $localization_array = array(
+            'ajax_url' => admin_url( 'admin-ajax.php' ),
+            'nonce'    => wp_create_nonce( 'ziada_ajax_nonce' )
+        );
+        wp_localize_script( $this->plugin_name, 'ziada_form_params', $localization_array );
     }
 
     /**
@@ -172,9 +194,27 @@ class Ziada_Registration_Form {
      * @return string The form HTML.
      */
     public function display_shortcode() {
+        // Set the flag to true because the shortcode is being rendered.
+        self::$load_assets = true;
+
+        // Enqueue assets here as a fallback for themes that don't use the_content filter properly.
+        $this->enqueue_assets();
+
         ob_start();
         include_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/partials/ziada-registration-form-public-display.php';
         return ob_get_clean();
+    }
+
+    /**
+     * Check if the shortcode is present on the current page/post.
+     *
+     * @since 1.0.0
+     */
+    public function check_for_shortcode() {
+        global $post;
+        if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'ziada_registration_form')) {
+            self::$load_assets = true;
+        }
     }
 
     /**
@@ -182,15 +222,20 @@ class Ziada_Registration_Form {
      *
      * @since 1.0.0
      */
-    public function handle_form_submission() {
+    public function handle_ajax_submission() {
+        // Check honeypot field
+        if ( ! empty( $_POST['user_website'] ) ) {
+            wp_send_json_error( array('message' => 'Spam detected.') );
+        }
+
         // Verify nonce
-        if ( ! isset( $_POST['ziada_nonce'] ) || ! wp_verify_nonce( $_POST['ziada_nonce'], 'ziada_form_submit_nonce' ) ) {
-            wp_die( 'Security check failed.' );
+        if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'ziada_ajax_nonce' ) ) {
+            wp_send_json_error( array('message' => 'Security check failed.') );
         }
 
         // Server-side validation (basic example)
         if ( empty( $_POST['fname_1'] ) || empty( $_POST['email_1'] ) ) {
-             wp_die( 'Please fill in all required fields.' );
+             wp_send_json_error( array('message' => 'Please fill in all required fields.') );
         }
 
         global $wpdb;
@@ -301,16 +346,11 @@ class Ziada_Registration_Form {
         if ( $result ) {
             // Send email notifications
             $this->send_submission_emails($new_submission_id, $data);
-
-            // Need to create a thank you page and get its URL. For now, redirect to home.
-            $redirect_url = home_url( '/?submission=success' );
+            wp_send_json_success( array('message' => 'Thank you for your submission!') );
         } else {
             // Handle DB error
-            $redirect_url = home_url( '/?submission=error' );
+            wp_send_json_error( array('message' => 'There was an error processing your submission. Please try again.') );
         }
-
-        wp_redirect( $redirect_url );
-        exit;
     }
 
     /**

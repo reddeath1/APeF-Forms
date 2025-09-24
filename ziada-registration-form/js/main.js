@@ -112,7 +112,140 @@
             $(this).closest('.nominee-group').remove();
         });
 
+        // --- Form Submission ---
+        $('#multi-step-form').on('submit', function(e) {
+            e.preventDefault();
+
+            // Validate the final step before submitting
+            if (!validateStep(currentStep)) {
+                return;
+            }
+
+            const form = $(this);
+            const submitButton = form.find('button[type="submit"]');
+            const originalButtonText = submitButton.text();
+
+            // Add a message container if it doesn't exist
+            if ($('#form-messages').length === 0) {
+                form.after('<div id="form-messages" class="mt-3"></div>');
+            }
+            const messageContainer = $('#form-messages');
+            messageContainer.html('');
+
+            // Disable button and show sending message
+            submitButton.prop('disabled', true).text('Submitting...');
+
+            let formData = form.serialize();
+            // Add the action and nonce for WordPress AJAX
+            formData += '&action=ziada_form_submit&nonce=' + ziada_form_params.nonce;
+
+            $.ajax({
+                type: 'POST',
+                url: ziada_form_params.ajax_url,
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // On success, hide the form and show the success message
+                        form.hide();
+                        $('.progress').hide();
+                        messageContainer.html('<div class="alert alert-success">' + response.data.message + '</div>');
+                    } else {
+                        // On error, show the error message
+                        messageContainer.html('<div class="alert alert-danger">' + response.data.message + '</div>');
+                        submitButton.prop('disabled', false).text(originalButtonText);
+                    }
+                },
+                error: function() {
+                    // On AJAX failure
+                    messageContainer.html('<div class="alert alert-danger">An unexpected error occurred. Please try again.</div>');
+                    submitButton.prop('disabled', false).text(originalButtonText);
+                }
+            });
+        });
+
+        // --- Save/Load Progress from LocalStorage ---
+        const formId = 'ziada-reg-form-progress';
+
+        const saveFormProgress = () => {
+            const formData = $('#multi-step-form').serializeArray();
+            localStorage.setItem(formId, JSON.stringify(formData));
+        };
+
+        const loadFormProgress = () => {
+            const savedData = localStorage.getItem(formId);
+            if (savedData) {
+                const formData = JSON.parse(savedData);
+                formData.forEach(function(item) {
+                    const $element = $('[name="' + item.name + '"]');
+                    if ($element.is(':radio') || $element.is(':checkbox')) {
+                        $element.filter('[value="' + item.value + '"]').prop('checked', true).trigger('change');
+                    } else {
+                        $element.val(item.value);
+                    }
+                });
+            }
+        };
+
+        // Attach event listener to save progress on any input change
+        $('#multi-step-form').on('change', 'input, select, textarea', saveFormProgress);
+
+        // --- Form Submission ---
+        $('#multi-step-form').on('submit', function(e) {
+            e.preventDefault();
+
+            // Validate the final step before submitting
+            if (!validateStep(currentStep)) {
+                return;
+            }
+
+            const form = $(this);
+            const submitButton = form.find('button[type="submit"]');
+            const originalButtonText = submitButton.text();
+
+            // Add a message container if it doesn't exist
+            if ($('#form-messages').length === 0) {
+                form.after('<div id="form-messages" class="mt-3"></div>');
+            }
+            const messageContainer = $('#form-messages');
+            messageContainer.html('');
+
+            // Disable button and show sending message
+            submitButton.prop('disabled', true).text('Submitting...');
+
+            let formData = form.serialize();
+            // Add the action and nonce for WordPress AJAX
+            formData += '&action=ziada_form_submit&nonce=' + ziada_form_params.nonce;
+
+            $.ajax({
+                type: 'POST',
+                url: ziada_form_params.ajax_url,
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // On success, hide the form and show the success message
+                        form.hide();
+                        $('.progress').hide();
+                        messageContainer.html('<div class="alert alert-success">' + response.data.message + '</div>');
+                        // Clear saved progress
+                        localStorage.removeItem(formId);
+                    } else {
+                        // On error, show the error message
+                        messageContainer.html('<div class="alert alert-danger">' + response.data.message + '</div>');
+                        submitButton.prop('disabled', false).text(originalButtonText);
+                    }
+                },
+                error: function() {
+                    // On AJAX failure
+                    messageContainer.html('<div class="alert alert-danger">An unexpected error occurred. Please try again.</div>');
+                    submitButton.prop('disabled', false).text(originalButtonText);
+                }
+            });
+        });
+
         // Init
+        loadFormProgress();
         updateProgressBar();
 
     });

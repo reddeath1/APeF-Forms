@@ -62,35 +62,84 @@ class Ziada_Registrations_List_Table extends WP_List_Table {
     }
 
     /**
+     * Display the filter dropdown.
+     *
+     * @param string $which
+     */
+    protected function extra_tablenav($which) {
+        if ($which == "top") {
+            ?>
+            <div class="alignleft actions">
+                <select name="account_type_filter" id="account_type_filter">
+                    <option value="">All Account Types</option>
+                    <option value="individual" <?php selected(isset($_REQUEST['account_type_filter']) ? $_REQUEST['account_type_filter'] : '', 'individual'); ?>>Individual</option>
+                    <option value="joint" <?php selected(isset($_REQUEST['account_type_filter']) ? $_REQUEST['account_type_filter'] : '', 'joint'); ?>>Joint</option>
+                    <option value="company" <?php selected(isset($_REQUEST['account_type_filter']) ? $_REQUEST['account_type_filter'] : '', 'company'); ?>>Company</option>
+                    <option value="minor" <?php selected(isset($_REQUEST['account_type_filter']) ? $_REQUEST['account_type_filter'] : '', 'minor'); ?>>Minor</option>
+                </select>
+                <?php submit_button('Filter', 'button', 'filter_action', false, array('id' => 'post-query-submit')); ?>
+            </div>
+            <?php
+        }
+    }
+
+    /**
      * Prepares the list of items for displaying.
      */
     public function prepare_items() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'ziada_registrations';
-
         $per_page = 20;
+
         $columns = $this->get_columns();
         $hidden = array();
         $sortable = $this->get_sortable_columns();
-        $this->_column_headers = array( $columns, $hidden, $sortable );
+        $this->_column_headers = array($columns, $hidden, $sortable);
 
-        // Sorting
-        $orderby = ( ! empty( $_REQUEST['orderby'] ) ) ? sanitize_sql_orderby( $_REQUEST['orderby'] ) : 'created_at';
-        $order = ( ! empty( $_REQUEST['order'] ) ) ? sanitize_key( $_REQUEST['order'] ) : 'DESC';
+        $where_clauses = array();
+        $query_args = array();
 
-        // Pagination
-        $current_page = $this->get_pagenum();
-        $total_items = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name" );
+        // Search
+        if (!empty($_REQUEST['s'])) {
+            $search = sanitize_text_field($_REQUEST['s']);
+            $where_clauses[] = "(fname_1 LIKE %s OR lname_1 LIKE %s OR email_1 LIKE %s)";
+            $like_term = '%' . $wpdb->esc_like($search) . '%';
+            $query_args[] = $like_term;
+            $query_args[] = $like_term;
+            $query_args[] = $like_term;
+        }
 
-        $this->set_pagination_args( array(
+        // Filter
+        if (!empty($_REQUEST['account_type_filter'])) {
+            $filter = sanitize_text_field($_REQUEST['account_type_filter']);
+            $where_clauses[] = "account_type = %s";
+            $query_args[] = $filter;
+        }
+
+        $where_sql = '';
+        if (count($where_clauses) > 0) {
+            $where_sql = ' WHERE ' . implode(' AND ', $where_clauses);
+        }
+
+        $sql = "SELECT * FROM $table_name" . $where_sql;
+        if (!empty($query_args)) {
+            $sql = $wpdb->prepare($sql, $query_args);
+        }
+
+        $total_items = $wpdb->get_var($sql);
+        $this->set_pagination_args(array(
             'total_items' => $total_items,
-            'per_page'    => $per_page
-        ) );
+            'per_page'    => $per_page,
+        ));
 
-        $offset = ( $current_page - 1 ) * $per_page;
+        $orderby = !empty($_REQUEST['orderby']) ? sanitize_sql_orderby($_REQUEST['orderby']) : 'created_at';
+        $order = !empty($_REQUEST['order']) ? sanitize_key($_REQUEST['order']) : 'DESC';
+        $current_page = $this->get_pagenum();
+        $offset = ($current_page - 1) * $per_page;
+
         $this->items = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT id, fname_1, mname_1, lname_1, email_1, account_type, created_at FROM $table_name ORDER BY $orderby $order LIMIT %d OFFSET %d",
+                str_replace("SELECT *", "SELECT id, fname_1, mname_1, lname_1, email_1, account_type, created_at", $sql) . " ORDER BY $orderby $order LIMIT %d OFFSET %d",
                 $per_page,
                 $offset
             ), ARRAY_A

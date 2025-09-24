@@ -38,6 +38,11 @@ The necessary styles and scripts are enqueued by the plugin's main class.
         display: flex;
         justify-content: space-between;
     }
+    .honeypot-field {
+        position: absolute !important;
+        left: -5000px;
+        top: -5000px;
+    }
 </style>
 
 <div id="ziada-reg-form">
@@ -49,6 +54,12 @@ The necessary styles and scripts are enqueued by the plugin's main class.
     <form id="multi-step-form" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="POST">
         <input type="hidden" name="action" value="ziada_form_submit">
         <?php wp_nonce_field( 'ziada_form_submit_nonce', 'ziada_nonce' ); ?>
+
+        <!-- Honeypot anti-spam field -->
+        <p class="honeypot-field">
+            <label for="user_website">Website</label>
+            <input type="text" name="user_website" id="user_website" value="" tabindex="-1" autocomplete="off">
+        </p>
 
         <!-- Step 1: Account Type & 1st Investor Info -->
         <div class="form-step active" data-step="1">
