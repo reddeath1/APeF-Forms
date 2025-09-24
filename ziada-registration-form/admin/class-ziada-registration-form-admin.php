@@ -100,7 +100,7 @@ class Ziada_Registration_Form_Admin {
             <p>This plugin was created by <strong>Frank Galos</strong>.</p>
 
             <h2>About Owesis</h2>
-            <div style="background:#fff; border: 1px solid #ccc; padding: 15px;">
+            <div style="background:#fff; border: 1px solid #ccc; padding: 15px; margin-bottom: 20px;">
                 <p>
                     At Owesis, we specialize in crafting cutting-edge core operating technology, mobile applications, and complex web solutions designed to fuel business expansion while tackling our clients' most formidable challenges head-on.
                 </p>
@@ -111,7 +111,17 @@ class Ziada_Registration_Form_Admin {
                     Our passion lies in addressing the toughest problems our clients face, making their business growth our top priority. With years of expertise, Owesis Technology is your go-to team for innovative solutions that pave the way for success.
                 </p>
             </div>
-            <p><a href="https://owesis.com" target="_blank" class="button button-primary" style="margin-top: 15px;">Visit Owesis.com for more information</a></p>
+            <p><a href="https://owesis.com" target="_blank" class="button button-primary">Visit Owesis.com for more information</a></p>
+
+            <hr>
+
+            <h2>Plugin Usage</h2>
+            <div style="background:#fff; border: 1px solid #ccc; padding: 15px;">
+                <p>To display the registration form on any page or post, please use the following shortcode:</p>
+                <p><code>[ziada_registration_form]</code></p>
+                <p>Simply copy and paste this code into the content editor for the desired page.</p>
+            </div>
+
         </div>
         <?php
     }
