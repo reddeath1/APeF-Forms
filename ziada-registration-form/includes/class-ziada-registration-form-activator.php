@@ -5,11 +5,6 @@
  * @author     Frank Galos
  */
 class Ziada_Registration_Form_Activator {
-
-    /**
-     * The `activate` method is called on plugin activation.
-     * It creates the custom database table to store form submissions.
-     */
     public static function activate() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'ziada_registrations';
@@ -19,8 +14,6 @@ class Ziada_Registration_Form_Activator {
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
             account_type varchar(55) DEFAULT '' NOT NULL,
-
-            -- Investor 1 Fields
             fname_1 varchar(100) NOT NULL,
             mname_1 varchar(100) DEFAULT NULL,
             lname_1 varchar(100) NOT NULL,
@@ -31,23 +24,17 @@ class Ziada_Registration_Form_Activator {
             id_number_1 varchar(100) DEFAULT NULL,
             mobile_1 varchar(55) DEFAULT NULL,
             email_1 varchar(100) DEFAULT NULL,
-            primary_user_photo text DEFAULT NULL, -- New field for photo URL
-
-            -- Conditional Fields (JSON encoded)
+            primary_user_photo text DEFAULT NULL,
             investor_2_info text DEFAULT NULL,
             company_info text DEFAULT NULL,
             guardian_info text DEFAULT NULL,
-
-            -- Other sections as JSON
             contact_info text DEFAULT NULL,
             bank_details text DEFAULT NULL,
             income_source text DEFAULT NULL,
-            nominees text DEFAULT NULL, -- Will store nominee data including photo URLs
+            nominees text DEFAULT NULL,
             nominee_guardian text DEFAULT NULL,
             payment_details text DEFAULT NULL,
-
             declaration_signed tinyint(1) NOT NULL DEFAULT 0,
-
             PRIMARY KEY  (id)
         ) $charset_collate;";
 

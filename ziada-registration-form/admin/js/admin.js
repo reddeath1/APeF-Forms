@@ -1,1 +1,1 @@
-// Ziada Registration Form Admin JS
+/* Ziada Registration Form Admin JS */
