@@ -6,35 +6,32 @@ A comprehensive WordPress plugin that provides a multi-step registration form fo
 
 ### User-Facing Form
 *   **Multi-Step Form:** A user-friendly, multi-step registration form with a progress bar and animated transitions.
-*   **Conditional Logic:** The form intelligently shows or hides fields based on the selected account type (Individual, Joint, Company, Minor).
+*   **Conditional Logic:** The form intelligently shows or hides fields based on the selected account type.
 *   **AJAX Submission:** Smooth form submission without page reloads.
 *   **Save Progress:** Automatically saves user input to local storage, allowing them to resume later.
+*   **File Uploads:** Allows users to upload photos for the primary applicant and nominees.
 *   **Responsive Design:** Styled with Bootstrap for a clean look on all devices.
 *   **Anti-Spam:** Includes a honeypot field to protect against bot submissions.
 
 ### Admin & Data Management
-*   **Admin Interface:** A dedicated "Ziada" menu in the WordPress admin area to view all submissions.
-*   **Submission Management:** View full details for each submission.
-*   **Search & Filter:** Easily search for submissions by name or email, and filter by account type.
+*   **Admin Interface:** A dedicated "Ziada" menu in the WordPress admin area.
+*   **Submission Management:** View full details for each submission, including uploaded photos.
+*   **Search & Filter:** Easily search for submissions and filter by account type.
 *   **Delete & Bulk Delete:** Securely delete single or multiple submissions.
-*   **Export to CSV:** Export all submission data to a CSV file with a single click.
-*   **Email Notifications:** Automated email notifications are sent to the site administrator and the user upon successful form submission.
+*   **Export to CSV:** Export all submission data to a CSV file.
+*   **Print / Save as PDF:** Generate a print-friendly version of a single submission.
+*   **Email Notifications:** Automated email notifications for admins and users.
 *   **Performance:** Scripts and styles are loaded conditionally only on pages where the form is present.
 
 ### General
-*   **Shortcode:** Easily embed the form on any page or post using the `[ziada_registration_form]` shortcode.
-*   **About Page:** An 'About' page in the admin area with details about the plugin author and company.
+*   **Shortcode:** Easily embed the form using `[ziada_registration_form]`.
+*   **About Page:** An 'About' page with plugin usage instructions and company details.
 
 ## Installation
 
-1.  Upload the `ziada-registration-form` directory to the `/wp-content/plugins/` directory on your WordPress installation.
+1.  Upload the `ziada-registration-form` directory to the `/wp-content/plugins/` directory.
 2.  Activate the plugin through the 'Plugins' menu in WordPress.
-3.  Upon activation, the plugin will create a custom database table (`wp_ziada_registrations`) to store submissions.
 
 ## Usage
 
-To display the registration form on a page or post, simply add the following shortcode to your content:
-
-`[ziada_registration_form]`
-
-All submissions will then be visible in the "Ziada" menu in your WordPress admin dashboard.
+To display the registration form, add the `[ziada_registration_form]` shortcode to any page or post. Submissions can be managed from the "Ziada" menu in the admin dashboard.

@@ -1,21 +1,14 @@
 <?php
-
 /**
  * Fired during plugin activation.
- *
- * This class defines all code necessary to run during the plugin's activation.
- *
- * @since      1.0.0
- * @package    Ziada_Reg_Form
- * @subpackage Ziada_Reg_Form/includes
+ * @link       https://owesis.com
+ * @author     Frank Galos
  */
 class Ziada_Registration_Form_Activator {
 
     /**
      * The `activate` method is called on plugin activation.
      * It creates the custom database table to store form submissions.
-     *
-     * @since    1.0.0
      */
     public static function activate() {
         global $wpdb;
@@ -38,25 +31,21 @@ class Ziada_Registration_Form_Activator {
             id_number_1 varchar(100) DEFAULT NULL,
             mobile_1 varchar(55) DEFAULT NULL,
             email_1 varchar(100) DEFAULT NULL,
+            primary_user_photo text DEFAULT NULL, -- New field for photo URL
 
-            -- Conditional Fields (JSON encoded or separate columns)
-            -- For simplicity, we'll store complex/variable data as TEXT.
-            -- A more normalized approach might use separate tables.
-            investor_2_info text DEFAULT NULL, -- JSON for Section B
-            company_info text DEFAULT NULL,    -- JSON for Section C
-            guardian_info text DEFAULT NULL,   -- JSON for Section D
+            -- Conditional Fields (JSON encoded)
+            investor_2_info text DEFAULT NULL,
+            company_info text DEFAULT NULL,
+            guardian_info text DEFAULT NULL,
 
-            -- Contact & Bank
-            contact_info text DEFAULT NULL,    -- JSON for Section E
-            bank_details text DEFAULT NULL,    -- JSON for Section F
+            -- Other sections as JSON
+            contact_info text DEFAULT NULL,
+            bank_details text DEFAULT NULL,
+            income_source text DEFAULT NULL,
+            nominees text DEFAULT NULL, -- Will store nominee data including photo URLs
+            nominee_guardian text DEFAULT NULL,
+            payment_details text DEFAULT NULL,
 
-            -- Financials & Nominees
-            income_source text DEFAULT NULL,   -- JSON for Section G
-            nominees text DEFAULT NULL,        -- JSON for Section H
-            nominee_guardian text DEFAULT NULL,-- JSON for Nominee Guardian info
-
-            -- Payment & Declaration
-            payment_details text DEFAULT NULL, -- JSON for Section J
             declaration_signed tinyint(1) NOT NULL DEFAULT 0,
 
             PRIMARY KEY  (id)

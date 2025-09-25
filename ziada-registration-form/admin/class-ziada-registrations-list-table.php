@@ -1,20 +1,10 @@
 <?php
-
+// The full, final code for the WP_List_Table class
 if ( ! class_exists( 'WP_List_Table' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
 }
-
-/**
- * Creates a WP_List_Table for Ziada Registration submissions.
- *
- * @package    Ziada_Reg_Form
- * @subpackage Ziada_Reg_Form/admin
- */
 class Ziada_Registrations_List_Table extends WP_List_Table {
 
-    /**
-     * Constructor.
-     */
     public function __construct() {
         parent::__construct( array(
             'singular' => 'Submission',
@@ -23,83 +13,54 @@ class Ziada_Registrations_List_Table extends WP_List_Table {
         ) );
     }
 
-    /**
-     * Get a list of columns.
-     *
-     * @return array
-     */
     public function get_columns() {
         return array(
             'cb'           => '<input type="checkbox" />',
             'fname_1'      => 'Name',
             'email_1'      => 'Email',
             'account_type' => 'Account Type',
-            'created_at'   => 'Date Submitted'
+            'created_at'   => 'Date'
         );
     }
 
-    /**
-     * Get a list of sortable columns.
-     *
-     * @return array
-     */
     public function get_sortable_columns() {
         return array(
             'fname_1'    => array( 'fname_1', false ),
-            'created_at' => array( 'created_at', true ) // True means it's sorted by default
+            'created_at' => array( 'created_at', true )
         );
     }
 
-    /**
-     * Get a list of bulk actions.
-     *
-     * @return array
-     */
     protected function get_bulk_actions() {
-        return array(
-            'bulk-delete' => 'Delete'
-        );
+        return array('bulk-delete' => 'Delete');
     }
 
-    /**
-     * Display the filter dropdown.
-     *
-     * @param string $which
-     */
     protected function extra_tablenav($which) {
         if ($which == "top") {
             ?>
             <div class="alignleft actions">
-                <select name="account_type_filter" id="account_type_filter">
-                    <option value="">All Account Types</option>
+                <select name="account_type_filter">
+                    <option value="">All Types</option>
                     <option value="individual" <?php selected(isset($_REQUEST['account_type_filter']) ? $_REQUEST['account_type_filter'] : '', 'individual'); ?>>Individual</option>
                     <option value="joint" <?php selected(isset($_REQUEST['account_type_filter']) ? $_REQUEST['account_type_filter'] : '', 'joint'); ?>>Joint</option>
                     <option value="company" <?php selected(isset($_REQUEST['account_type_filter']) ? $_REQUEST['account_type_filter'] : '', 'company'); ?>>Company</option>
                     <option value="minor" <?php selected(isset($_REQUEST['account_type_filter']) ? $_REQUEST['account_type_filter'] : '', 'minor'); ?>>Minor</option>
                 </select>
-                <?php submit_button('Filter', 'button', 'filter_action', false, array('id' => 'post-query-submit')); ?>
+                <?php submit_button('Filter', 'button', 'filter_action', false); ?>
             </div>
             <?php
         }
     }
 
-    /**
-     * Prepares the list of items for displaying.
-     */
     public function prepare_items() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'ziada_registrations';
         $per_page = 20;
 
-        $columns = $this->get_columns();
-        $hidden = array();
-        $sortable = $this->get_sortable_columns();
-        $this->_column_headers = array($columns, $hidden, $sortable);
+        $this->_column_headers = array($this->get_columns(), array(), $this->get_sortable_columns());
 
         $where_clauses = array();
         $query_args = array();
 
-        // Search
         if (!empty($_REQUEST['s'])) {
             $search = sanitize_text_field($_REQUEST['s']);
             $where_clauses[] = "(fname_1 LIKE %s OR lname_1 LIKE %s OR email_1 LIKE %s)";
@@ -109,27 +70,20 @@ class Ziada_Registrations_List_Table extends WP_List_Table {
             $query_args[] = $like_term;
         }
 
-        // Filter
         if (!empty($_REQUEST['account_type_filter'])) {
             $filter = sanitize_text_field($_REQUEST['account_type_filter']);
             $where_clauses[] = "account_type = %s";
             $query_args[] = $filter;
         }
 
-        $where_sql = '';
-        if (count($where_clauses) > 0) {
-            $where_sql = ' WHERE ' . implode(' AND ', $where_clauses);
-        }
+        $where_sql = count($where_clauses) > 0 ? ' WHERE ' . implode(' AND ', $where_clauses) : '';
 
-        $sql = "SELECT * FROM $table_name" . $where_sql;
-        if (!empty($query_args)) {
-            $sql = $wpdb->prepare($sql, $query_args);
-        }
+        $count_sql = "SELECT COUNT(id) FROM $table_name" . $where_sql;
+        $total_items = $wpdb->get_var($wpdb->prepare($count_sql, $query_args));
 
-        $total_items = $wpdb->get_var($sql);
         $this->set_pagination_args(array(
             'total_items' => $total_items,
-            'per_page'    => $per_page,
+            'per_page'    => $per_page
         ));
 
         $orderby = !empty($_REQUEST['orderby']) ? sanitize_sql_orderby($_REQUEST['orderby']) : 'created_at';
@@ -137,60 +91,25 @@ class Ziada_Registrations_List_Table extends WP_List_Table {
         $current_page = $this->get_pagenum();
         $offset = ($current_page - 1) * $per_page;
 
-        $this->items = $wpdb->get_results(
-            $wpdb->prepare(
-                str_replace("SELECT *", "SELECT id, fname_1, mname_1, lname_1, email_1, account_type, created_at", $sql) . " ORDER BY $orderby $order LIMIT %d OFFSET %d",
-                $per_page,
-                $offset
-            ), ARRAY_A
-        );
+        $select_sql = "SELECT id, fname_1, lname_1, email_1, account_type, created_at FROM $table_name" . $where_sql . " ORDER BY $orderby $order LIMIT %d OFFSET %d";
+        $this->items = $wpdb->get_results($wpdb->prepare($select_sql, array_merge($query_args, array($per_page, $offset))), ARRAY_A);
     }
 
-    /**
-     * Default column rendering.
-     *
-     * @param array $item
-     * @param string $column_name
-     * @return mixed
-     */
     protected function column_default( $item, $column_name ) {
-        return isset( $item[ $column_name ] ) ? esc_html( $item[ $column_name ] ) : print_r( $item, true );
+        return esc_html( $item[ $column_name ] );
     }
 
-    /**
-     * Renders the 'fname_1' column (Name).
-     *
-     * @param array $item
-     * @return string
-     */
+    protected function column_cb( $item ) {
+        return sprintf('<input type="checkbox" name="registration[]" value="%s" />', $item['id']);
+    }
+
     protected function column_fname_1( $item ) {
         $name = esc_html( $item['fname_1'] . ' ' . $item['lname_1'] );
-
-        // Add nonce for the delete action
         $delete_nonce = wp_create_nonce( 'ziada_delete_submission' );
-        $delete_link = sprintf(
-            '<a href="?page=%s&action=delete&registration=%s&_wpnonce=%s" class="delete-submission">Delete</a>',
-            esc_attr( $_REQUEST['page'] ),
-            absint( $item['id'] ),
-            $delete_nonce
-        );
-
         $actions = array(
             'view' => sprintf('<a href="?page=%s&action=view&registration=%s">View</a>', esc_attr($_REQUEST['page']), absint($item['id'])),
-            'delete' => $delete_link,
+            'delete' => sprintf('<a href="?page=%s&action=delete&registration=%s&_wpnonce=%s" class="delete-submission">Delete</a>', esc_attr($_REQUEST['page']), absint($item['id']), $delete_nonce),
         );
         return $name . $this->row_actions($actions);
-    }
-
-    /**
-     * Renders the checkbox column.
-     *
-     * @param array $item
-     * @return string
-     */
-    protected function column_cb( $item ) {
-        return sprintf(
-            '<input type="checkbox" name="registration[]" value="%s" />', $item['id']
-        );
     }
 }
