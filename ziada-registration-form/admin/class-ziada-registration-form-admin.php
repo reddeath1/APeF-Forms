@@ -1,5 +1,11 @@
 <?php
+/**
+ * The admin-specific functionality of the plugin.
+ * @link       https://owesis.com
+ * @author     Frank Galos
+ */
 class Ziada_Registration_Form_Admin {
+
     private $plugin_name;
     private $version;
 
@@ -8,13 +14,69 @@ class Ziada_Registration_Form_Admin {
         $this->version = $version;
     }
 
-    // All admin methods, including:
-    // - add_admin_menu()
-    // - register_settings()
-    // - display_settings_page()
-    // - display_submissions_list_page()
-    // - display_single_submission_page()
-    // - process_actions() (for delete/bulk-delete)
-    // - process_csv_export()
-    // - handle_print_view()
+    public function enqueue_scripts() {
+        wp_enqueue_script($this->plugin_name . '-admin', plugin_dir_url(__FILE__) . 'js/admin.js', array('jquery'), $this->version, false);
+    }
+
+    public function add_admin_menu() {
+        add_menu_page('Ziada', 'Ziada', 'manage_options', $this->plugin_name, array($this, 'display_submissions_list_page'), 'dashicons-list-view', 25);
+        add_submenu_page($this->plugin_name, 'Submissions', 'Submissions', 'manage_options', $this->plugin_name, array($this, 'display_submissions_list_page'));
+        add_submenu_page($this->plugin_name, 'Settings', 'Settings', 'manage_options', $this->plugin_name . '-settings', array($this, 'display_settings_page'));
+        add_submenu_page($this->plugin_name, 'About', 'About', 'manage_options', $this->plugin_name . '-about', array($this, 'display_about_page'));
+    }
+
+    public function register_settings() {
+        register_setting('ziada_settings_group', 'ziada_form_language');
+    }
+
+    public function display_settings_page() {
+        include_once 'partials/ziada-registration-form-admin-settings-display.php';
+    }
+
+    public function display_about_page() {
+        include_once 'partials/ziada-registration-form-admin-about-display.php';
+    }
+
+    public function display_submissions_list_page() {
+        $this->process_actions();
+        if (isset($_GET['message'])) {
+             add_action('admin_notices', function() { echo '<div class="notice notice-success is-dismissible"><p>Action completed.</p></div>'; });
+        }
+        $action = isset($_GET['action']) ? sanitize_key($_GET['action']) : 'list';
+        if ('view' === $action) {
+            $this->display_single_submission_page();
+        } else {
+            require_once 'class-ziada-registrations-list-table.php';
+            $list_table = new Ziada_Registrations_List_Table();
+            $list_table->prepare_items();
+            ?>
+            <div class="wrap">
+                <h1>Submissions <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=' . $this->plugin_name . '&action=export_csv'), 'ziada_export_nonce')); ?>" class="page-title-action">Export to CSV</a></h1>
+                <form method="post">
+                    <?php $list_table->search_box('Search', 'submission'); $list_table->display(); ?>
+                </form>
+            </div>
+            <?php
+        }
+    }
+
+    private function display_single_submission_page() {
+        $registration_id = isset($_GET['registration']) ? absint($_GET['registration']) : 0;
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'ziada_registrations';
+        $submission = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $registration_id));
+        include_once 'partials/ziada-registration-form-admin-view-display.php';
+    }
+
+    public function process_actions() {
+        // ... delete and bulk delete logic ...
+    }
+
+    public function process_csv_export() {
+        // ... CSV export logic ...
+    }
+
+    public function handle_print_view() {
+        // ... print view logic ...
+    }
 }
