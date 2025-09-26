@@ -7,9 +7,9 @@
         ?>
         <table class="form-table">
             <tr valign="top">
-                <th scope="row">Form Language</th>
+                <th scope="row"><label for="ziada_form_language">Form Language</label></th>
                 <td>
-                    <select name="ziada_form_language">
+                    <select id="ziada_form_language" name="ziada_form_language">
                         <option value="en" <?php selected(get_option('ziada_form_language'), 'en'); ?>>English</option>
                         <option value="sw" <?php selected(get_option('ziada_form_language'), 'sw'); ?>>Swahili</option>
                     </select>

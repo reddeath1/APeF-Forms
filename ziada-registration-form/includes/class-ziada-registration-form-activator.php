@@ -41,7 +41,6 @@ class Ziada_Registration_Form_Activator {
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
 
-        // Add language setting option
         add_option('ziada_form_language', 'en');
     }
 }

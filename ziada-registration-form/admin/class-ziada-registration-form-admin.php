@@ -5,7 +5,6 @@
  * @author     Frank Galos
  */
 class Ziada_Registration_Form_Admin {
-
     private $plugin_name;
     private $version;
 
@@ -26,22 +25,13 @@ class Ziada_Registration_Form_Admin {
     }
 
     public function register_settings() {
-        register_setting('ziada_settings_group', 'ziada_form_language');
+        register_setting('ziada_settings_group', 'ziada_form_language', ['sanitize_callback' => 'sanitize_text_field']);
     }
 
-    public function display_settings_page() {
-        include_once 'partials/ziada-registration-form-admin-settings-display.php';
-    }
-
-    public function display_about_page() {
-        include_once 'partials/ziada-registration-form-admin-about-display.php';
-    }
+    public function display_settings_page() { include_once 'partials/ziada-registration-form-admin-settings-display.php'; }
+    public function display_about_page() { include_once 'partials/ziada-registration-form-admin-about-display.php'; }
 
     public function display_submissions_list_page() {
-        $this->process_actions();
-        if (isset($_GET['message'])) {
-             add_action('admin_notices', function() { echo '<div class="notice notice-success is-dismissible"><p>Action completed.</p></div>'; });
-        }
         $action = isset($_GET['action']) ? sanitize_key($_GET['action']) : 'list';
         if ('view' === $action) {
             $this->display_single_submission_page();
@@ -51,8 +41,10 @@ class Ziada_Registration_Form_Admin {
             $list_table->prepare_items();
             ?>
             <div class="wrap">
-                <h1>Submissions <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=' . $this->plugin_name . '&action=export_csv'), 'ziada_export_nonce')); ?>" class="page-title-action">Export to CSV</a></h1>
+                <h1>Submissions <a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['action' => 'export_csv']), 'ziada_export_nonce')); ?>" class="page-title-action">Export to CSV</a></h1>
+                <?php if (isset($_GET['message']) && $_GET['message'] == 'deleted') { echo '<div class="notice notice-success is-dismissible"><p>Submission(s) deleted.</p></div>'; } ?>
                 <form method="post">
+                    <input type="hidden" name="page" value="<?php echo esc_attr($_REQUEST['page']); ?>" />
                     <?php $list_table->search_box('Search', 'submission'); $list_table->display(); ?>
                 </form>
             </div>
@@ -61,22 +53,32 @@ class Ziada_Registration_Form_Admin {
     }
 
     private function display_single_submission_page() {
-        $registration_id = isset($_GET['registration']) ? absint($_GET['registration']) : 0;
         global $wpdb;
-        $table_name = $wpdb->prefix . 'ziada_registrations';
-        $submission = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $registration_id));
+        $id = isset($_GET['registration']) ? absint($_GET['registration']) : 0;
+        $submission = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ziada_registrations WHERE id = %d", $id));
         include_once 'partials/ziada-registration-form-admin-view-display.php';
     }
 
     public function process_actions() {
-        // ... delete and bulk delete logic ...
+        $action = $this->current_action();
+        if ('delete' === $action) {
+            check_admin_referer('ziada_delete_submission');
+            if (current_user_can('manage_options')) {
+                global $wpdb; $wpdb->delete($wpdb->prefix . 'ziada_registrations', ['id' => absint($_GET['registration'])]);
+                wp_safe_redirect(admin_url('admin.php?page=' . $this->plugin_name . '&message=deleted')); exit;
+            }
+        }
+        if ('bulk-delete' === $action) {
+            check_admin_referer('bulk-submissions');
+            if (current_user_can('manage_options') && !empty($_POST['registration'])) {
+                global $wpdb; $ids = array_map('absint', $_POST['registration']);
+                $ids_sql = implode(',', $ids);
+                $wpdb->query("DELETE FROM {$wpdb->prefix}ziada_registrations WHERE id IN($ids_sql)");
+                wp_safe_redirect(admin_url('admin.php?page=' . $this->plugin_name . '&message=deleted')); exit;
+            }
+        }
     }
 
-    public function process_csv_export() {
-        // ... CSV export logic ...
-    }
-
-    public function handle_print_view() {
-        // ... print view logic ...
-    }
+    public function process_csv_export() { /* ... CSV export logic ... */ }
+    public function handle_print_view() { /* ... Print view logic ... */ }
 }
