@@ -4,7 +4,6 @@
     <h2>About Owesis</h2>
     <div class="card" style="padding:15px;">
         <p>At Owesis, we specialize in crafting cutting-edge core operating technology, mobile applications, and complex web solutions designed to fuel business expansion while tackling our clients' most formidable challenges head-on.</p>
-        <p>We are the top 100% UI/UX design agency in Tanzania for startups. We excel in design, branding, web development & committed to 100% satisfaction with every project.</p>
     </div>
     <p><a href="https://owesis.com" target="_blank" class="button button-primary" style="margin-top:15px;">Visit Owesis.com</a></p>
     <hr>

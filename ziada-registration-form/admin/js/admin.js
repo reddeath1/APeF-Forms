@@ -1,1 +1,0 @@
-/* Ziada Registration Form Admin JS */

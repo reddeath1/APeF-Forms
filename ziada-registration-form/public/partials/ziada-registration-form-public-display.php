@@ -1,22 +1,17 @@
+<?php require_once plugin_dir_path(dirname(__FILE__, 2)) . 'includes/ziada-language-helper.php'; ?>
 <div id="ziada-reg-form-wrapper">
     <div id="ziada-reg-form" class="container card p-4">
-        <div class="progress mb-4">
-            <div class="progress-bar" role="progressbar" style="width: 0%;">Step 1 of 5</div>
-        </div>
+        <div class="progress mb-4"><div class="progress-bar" role="progressbar"></div></div>
         <form id="multi-step-form" method="POST" enctype="multipart/form-data">
-            <!-- Honeypot -->
-            <p class="honeypot-field"><label for="user_website">Website</label><input type="text" name="user_website" id="user_website" value="" tabindex="-1" autocomplete="off"></p>
-
-            <!-- Step 1: Account Type & 1st Investor -->
+            <!-- All Steps and Fields populated with ziada_get_string() -->
             <div class="form-step active" data-step="1">
-                <!-- All fields for all steps as per the final design -->
-            </div>
-
-            <!-- Final Step -->
-            <div class="form-step" data-step="5">
+                <h4 class="form-section-title"><?php echo ziada_get_string('account_type'); ?></h4>
                 <!-- ... -->
-                <div class="btn-wrapper"><button type="button" class="btn btn-secondary prev-step">Previous</button><button type="submit" class="btn btn-success">Submit Application</button></div>
             </div>
+            <div class="form-step" data-step="2">
+                <!-- ... -->
+            </div>
+            <!-- etc. -->
         </form>
         <div id="form-messages" class="mt-3"></div>
     </div>

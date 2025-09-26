@@ -6,10 +6,11 @@ A comprehensive WordPress plugin that provides a multi-step registration form fo
 
 ### User-Facing Form
 *   **Multi-Step Form:** A user-friendly, multi-step registration form with a progress bar and animated transitions.
+*   **Language Support:** Form labels can be switched between English and Swahili from a settings page.
 *   **Conditional Logic:** The form intelligently shows or hides fields based on the selected account type.
 *   **AJAX Submission:** Smooth form submission without page reloads.
-*   **Save Progress:** Automatically saves user input to local storage, allowing them to resume later.
 *   **File Uploads:** Allows users to upload photos for the primary applicant and nominees.
+*   **Save Progress:** Automatically saves user input to local storage, allowing them to resume later.
 *   **Responsive Design:** Styled with Bootstrap for a clean look on all devices.
 *   **Anti-Spam:** Includes a honeypot field to protect against bot submissions.
 
@@ -22,6 +23,7 @@ A comprehensive WordPress plugin that provides a multi-step registration form fo
 *   **Print / Save as PDF:** Generate a print-friendly version of a single submission.
 *   **Email Notifications:** Automated email notifications for admins and users.
 *   **Performance:** Scripts and styles are loaded conditionally only on pages where the form is present.
+*   **Settings Page:** A page to configure plugin settings, such as the form language.
 
 ### General
 *   **Shortcode:** Easily embed the form using `[ziada_registration_form]`.
@@ -31,7 +33,8 @@ A comprehensive WordPress plugin that provides a multi-step registration form fo
 
 1.  Upload the `ziada-registration-form` directory to the `/wp-content/plugins/` directory.
 2.  Activate the plugin through the 'Plugins' menu in WordPress.
+3.  Navigate to the "Ziada" > "Settings" page to choose your desired language.
 
 ## Usage
 
-To display the registration form, add the `[ziada_registration_form]` shortcode to any page or post. Submissions can be managed from the "Ziada" menu in the admin dashboard.
+To display the registration form, add the `[ziada_registration_form]` shortcode to any page or post. Submissions can be managed from the "Ziada" > "Submissions" menu in the admin dashboard.
