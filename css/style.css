@@ -1,0 +1,24 @@
+/* Final Polished CSS */
+#ziada-reg-form-wrapper {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fa;
+    padding: 2rem 0;
+}
+#ziada-reg-form {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+}
+#ziada-reg-form .progress { height: 8px; border-radius: 4px; }
+#ziada-reg-form .progress-bar { background-color: #007bff; transition: width 0.4s ease; }
+#ziada-reg-form .form-section-title { font-size: 1.2rem; font-weight: 600; color: #343a40; padding-bottom: 0.5rem; border-bottom: 2px solid #dee2e6; margin: 2rem 0 1.5rem 0; }
+#ziada-reg-form .form-group label { font-weight: 500; color: #495057; }
+#ziada-reg-form .form-control:focus { border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); }
+#ziada-reg-form .btn { font-weight: 500; border-radius: 0.25rem; }
+#ziada-reg-form .nominee-group { border: 1px solid #e9ecef; border-radius: 0.25rem; padding: 1.5rem; margin-bottom: 1rem; background-color: #fafafa; position: relative; }
+#ziada-reg-form .remove-nominee { position: absolute; top: 1rem; right: 1rem; }
+#ziada-reg-form .form-step { display: none; }
+#ziada-reg-form .form-step.active { display: block; animation: fadeIn 0.5s; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.honeypot-field { display: none !important; }
