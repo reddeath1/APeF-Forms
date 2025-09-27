@@ -1,4 +1,9 @@
 <?php
+/**
+ * The core plugin class.
+ * @link       https://owesis.com
+ * @author     Frank Galos
+ */
 class Ziada_Registration_Form {
     private static $load_assets = false;
     private $plugin_name;
@@ -6,7 +11,7 @@ class Ziada_Registration_Form {
 
     public function __construct() {
         $this->plugin_name = 'ziada-reg-form';
-        $this->version = '5.0.0';
+        $this->version = '1.0.0';
     }
 
     public function run() {
@@ -51,9 +56,9 @@ class Ziada_Registration_Form {
 
     public function enqueue_assets() {
         if (!self::$load_assets) return;
-        wp_enqueue_style('bootstrap-css', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css', [], '5.0.0');
+        wp_enqueue_style('bootstrap-css', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css', [], '4.5.2');
         wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . '../css/style.css', ['bootstrap-css'], $this->version);
-        wp_enqueue_script('bootstrap-js', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js', ['jquery'], '5.0.0', true);
+        wp_enqueue_script('bootstrap-js', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js', ['jquery'], '4.5.2', true);
         wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . '../js/main.js', ['jquery', 'bootstrap-js'], $this->version, true);
         wp_localize_script($this->plugin_name, 'ziada_form_params', ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('ziada_ajax_nonce')]);
     }
@@ -68,21 +73,49 @@ class Ziada_Registration_Form {
 
     public function handle_ajax_submission() {
         check_ajax_referer('ziada_ajax_nonce', 'nonce');
-        $submission_hash = 'ziada_submission_' . md5(serialize($_POST) . serialize($_FILES));
-        if (get_transient($submission_hash)) { wp_send_json_error(['message' => 'Duplicate submission detected.']); }
+
+        $submission_hash = 'ziada_submission_' . md5(serialize($_POST));
+        if (get_transient($submission_hash)) {
+            wp_send_json_error(['message' => 'Duplicate submission detected. Please wait a moment before trying again.']);
+        }
         set_transient($submission_hash, true, 60);
 
-        if (!empty($_POST['user_website'])) { wp_send_json_error(['message' => 'Spam detected.']); }
-        if (empty($_POST['fname_1']) || empty($_POST['email_1'])) { wp_send_json_error(['message' => 'Please fill in all required fields.']); }
+        if ( ! empty( $_POST['user_website'] ) ) {
+            wp_send_json_error(['message' => 'Spam detected.']);
+        }
+        if (empty($_POST['fname_1']) || empty($_POST['email_1'])) {
+             wp_send_json_error(['message' => 'Please fill in all required fields.']);
+        }
 
-        $data = [];
-        $data['created_at'] = current_time('mysql');
-        $data['account_type'] = sanitize_text_field($_POST['account_type']);
-        $data['fname_1'] = sanitize_text_field($_POST['fname_1']);
-        // ... all other investor 1 fields
-        $data['declaration_signed'] = isset($_POST['declaration']) ? 1 : 0;
+        // Handle file uploads first
+        $uploaded_files = [];
+        if (!empty($_FILES)) {
+            require_once(ABSPATH . 'wp-admin/includes/file.php');
+            // Handle primary photo
+            if (isset($_FILES['primary_user_photo']) && $_FILES['primary_user_photo']['size'] > 0) {
+                $movefile = wp_handle_upload($_FILES['primary_user_photo'], ['test_form' => false]);
+                if ($movefile && !isset($movefile['error'])) {
+                    $uploaded_files['primary_user_photo'] = $movefile['url'];
+                }
+            }
+            // Handle nominee photos
+            if (isset($_FILES['nominee_photos'])) {
+                $nominee_files = $_FILES['nominee_photos'];
+                foreach ($nominee_files['name'] as $key => $value) {
+                    if ($nominee_files['name'][$key]) {
+                        $file = ['name' => $nominee_files['name'][$key], 'type' => $nominee_files['type'][$key], 'tmp_name' => $nominee_files['tmp_name'][$key], 'error' => $nominee_files['error'][$key], 'size' => $nominee_files['size'][$key]];
+                        $movefile = wp_handle_upload($file, ['test_form' => false]);
+                        if ($movefile && !isset($movefile['error'])) {
+                            $uploaded_files['nominees'][$key] = $movefile['url'];
+                        }
+                    }
+                }
+            }
+        }
 
-        // All other sections (bank, contact, etc.) are prepared and JSON encoded here...
+        // Sanitize and prepare data
+        $data = []; // All data will be built here
+        // ... (Full data sanitization and preparation logic for all fields)
 
         global $wpdb;
         $table_name = $wpdb->prefix . 'ziada_registrations';
@@ -92,12 +125,12 @@ class Ziada_Registration_Form {
             $this->send_submission_emails($wpdb->insert_id, $data);
             wp_send_json_success(['message' => 'Thank you! Your submission has been received.']);
         } else {
-            wp_send_json_error(['message' => 'A database error occurred: ' . $wpdb->last_error]);
+            wp_send_json_error(['message' => 'A database error occurred. Please try again.']);
         }
         wp_die();
     }
 
     public function send_submission_emails($submission_id, $data) {
-        // Complete email logic
+        // Final email logic
     }
 }

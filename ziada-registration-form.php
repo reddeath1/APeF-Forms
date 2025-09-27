@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Ziada
  * Plugin URI:        https://owesis.com/ziada
- * Description:       A multi-step registration form for Ziada.
- * Version:           5.0.0
+ * Description:       A multi-step registration form for APEF.
+ * Version:           1.0.0
  * Author:            Frank Galos
  * Author URI:        https://owesis.com
  * License:           GPL v2 or later
@@ -14,7 +14,7 @@
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) die;
 
-define( 'ZIADA_REG_FORM_VERSION', '5.0.0' );
+define( 'ZIADA_REG_FORM_VERSION', '1.0.0' );
 
 /**
  * The code that runs during plugin activation.

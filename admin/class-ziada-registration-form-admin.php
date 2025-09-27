@@ -59,6 +59,11 @@ class Ziada_Registration_Form_Admin {
         include_once 'partials/ziada-registration-form-admin-view-display.php';
     }
 
+    private function current_action()
+    {
+        return $_GET['action'] ?? '';
+    }
+
     public function process_actions() {
         $action = $this->current_action();
         if ('delete' === $action) {
