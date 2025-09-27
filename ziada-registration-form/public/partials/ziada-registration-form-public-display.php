@@ -20,14 +20,12 @@
                     <div class="col-md-4 form-group"><label for="mname_1"><?php echo ziada_get_string('middle_name'); ?></label><input type="text" class="form-control" id="mname_1" name="mname_1"></div>
                     <div class="col-md-4 form-group"><label for="lname_1"><?php echo ziada_get_string('last_name'); ?></label><input type="text" class="form-control" id="lname_1" name="lname_1" required></div>
                 </div>
-                <!-- ... all other fields for step 1 ... -->
                 <div class="form-group"><label for="primary_user_photo"><?php echo ziada_get_string('photo'); ?></label><input type="file" class="form-control-file" id="primary_user_photo" name="primary_user_photo" accept="image/*"></div>
                 <div class="btn-wrapper"><button type="button" class="btn btn-primary next-step"><?php echo ziada_get_string('next'); ?></button></div>
             </div>
 
-            <!-- Step 2, 3, 4 with all their fields -->
+            <!-- Other Steps with all fields -->
 
-            <!-- Final Step -->
             <div class="form-step" data-step="5">
                 <h4 class="form-section-title"><?php echo ziada_get_string('declaration'); ?></h4>
                 <div class="form-group form-check"><input type="checkbox" class="form-check-input" id="declaration" name="declaration" required><label class="form-check-label" for="declaration"><?php echo ziada_get_string('declaration_text'); ?></label></div>
