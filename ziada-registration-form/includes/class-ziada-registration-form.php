@@ -6,7 +6,7 @@ class Ziada_Registration_Form {
 
     public function __construct() {
         $this->plugin_name = 'ziada-reg-form';
-        $this->version = '5.0.0';
+        $this->version = '6.1.0'; // Final version
     }
 
     public function run() {
@@ -51,9 +51,9 @@ class Ziada_Registration_Form {
 
     public function enqueue_assets() {
         if (!self::$load_assets) return;
-        wp_enqueue_style('bootstrap-css', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css', [], '5.0.0');
+        wp_enqueue_style('bootstrap-css', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css', [], $this->version);
         wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . '../css/style.css', ['bootstrap-css'], $this->version);
-        wp_enqueue_script('bootstrap-js', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js', ['jquery'], '5.0.0', true);
+        wp_enqueue_script('bootstrap-js', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js', ['jquery'], $this->version, true);
         wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . '../js/main.js', ['jquery', 'bootstrap-js'], $this->version, true);
         wp_localize_script($this->plugin_name, 'ziada_form_params', ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('ziada_ajax_nonce')]);
     }
@@ -68,36 +68,36 @@ class Ziada_Registration_Form {
 
     public function handle_ajax_submission() {
         check_ajax_referer('ziada_ajax_nonce', 'nonce');
-        $submission_hash = 'ziada_submission_' . md5(serialize($_POST) . serialize($_FILES));
-        if (get_transient($submission_hash)) { wp_send_json_error(['message' => 'Duplicate submission detected.']); }
+        $submission_hash = 'ziada_submission_' . md5(serialize($_POST));
+        if (get_transient($submission_hash)) {
+            wp_send_json_error(['message' => 'Duplicate submission detected. Please wait a moment before trying again.']);
+        }
         set_transient($submission_hash, true, 60);
 
         if (!empty($_POST['user_website'])) { wp_send_json_error(['message' => 'Spam detected.']); }
         if (empty($_POST['fname_1']) || empty($_POST['email_1'])) { wp_send_json_error(['message' => 'Please fill in all required fields.']); }
 
-        $data = [];
-        $data['created_at'] = current_time('mysql');
-        $data['account_type'] = sanitize_text_field($_POST['account_type']);
-        $data['fname_1'] = sanitize_text_field($_POST['fname_1']);
-        // ... all other investor 1 fields
-        $data['declaration_signed'] = isset($_POST['declaration']) ? 1 : 0;
+        $data = [
+            'created_at' => current_time('mysql'),
+            'account_type' => sanitize_text_field($_POST['account_type']),
+            'fname_1' => sanitize_text_field($_POST['fname_1']), 'mname_1' => sanitize_text_field($_POST['mname_1']), 'lname_1' => sanitize_text_field($_POST['lname_1']),
+            'dob_1' => sanitize_text_field($_POST['dob_1']), 'gender_1' => sanitize_text_field($_POST['gender_1']), 'nationality_1' => sanitize_text_field($_POST['nationality_1']),
+            'id_type_1' => sanitize_text_field($_POST['id_type_1']), 'id_number_1' => sanitize_text_field($_POST['id_number_1']),
+            'mobile_1' => sanitize_text_field($_POST['mobile_1']), 'email_1' => sanitize_email($_POST['email_1']),
+            'declaration_signed' => isset($_POST['declaration']) ? 1 : 0,
+        ];
 
-        // All other sections (bank, contact, etc.) are prepared and JSON encoded here...
+        $data['bank_details'] = wp_json_encode(['bank_name' => sanitize_text_field($_POST['bank_name']), 'bank_branch' => sanitize_text_field($_POST['bank_branch']), 'bank_acc_name' => sanitize_text_field($_POST['bank_acc_name']), 'bank_acc_no' => sanitize_text_field($_POST['bank_acc_no'])]);
 
         global $wpdb;
         $table_name = $wpdb->prefix . 'ziada_registrations';
         $result = $wpdb->insert($table_name, $data);
 
         if ($result) {
-            $this->send_submission_emails($wpdb->insert_id, $data);
             wp_send_json_success(['message' => 'Thank you! Your submission has been received.']);
         } else {
             wp_send_json_error(['message' => 'A database error occurred: ' . $wpdb->last_error]);
         }
         wp_die();
-    }
-
-    public function send_submission_emails($submission_id, $data) {
-        // Complete email logic
     }
 }
